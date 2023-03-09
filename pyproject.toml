@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "hydra-smac"
+version = "0.0.1"
+description = "Hydra + SMAC"
+readme = "README.md"
+authors = [{ name = "Corné Spek" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3.10",
+]
+keywords = ["Hydra", "SMAC"]
+requires-python = ">=3.10"
+dependencies = [
+    "SMAC == 2.0.0"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/kw-corne/hydra-smac"
+"Bug Tracker" = "https://github.com/kw-corne/hydra-smac/issues"
+
+[project.optional-dependencies]
+dev = [
+    "black", 
+    "isort", 
+    "tox", 
+    "pytest",
+    "pre-commit",
+    "flake8",
+    "mypy",
+    "bumpver",
+]
+
