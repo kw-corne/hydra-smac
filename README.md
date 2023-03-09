@@ -1,3 +1,3 @@
 # hydra-smac
 
-Version 0.0.4
+Version 0.0.5
