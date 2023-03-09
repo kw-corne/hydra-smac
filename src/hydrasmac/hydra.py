@@ -17,7 +17,7 @@ from smac.facade.multi_fidelity_facade import MultiFidelityFacade
 from smac.runhistory.runhistory import RunHistory
 from smac.scenario import Scenario
 
-from hydrasmac.types import CostDict, Incumbent, TargetFunction
+from src.hydrasmac.types import CostDict, Incumbent, TargetFunction
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +164,7 @@ class Hydra:
         self, config: Configuration, runhistory: RunHistory
     ) -> CostDict:
         instance_costs: dict[str, list[float]] = {
-            k: [] for k in self._instances
+            k: [] for k in self._instances  # type: ignore
         }
 
         for isb in runhistory.get_instance_seed_budget_keys(config):
