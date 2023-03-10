@@ -7,7 +7,7 @@ from smac.scenario import Scenario
 
 def get_scenario_dict(scenario: Scenario) -> dict[str, Any]:
     """TODO Docstring"""
-    config_space = copy.deepcopy(Scenario.configspace)
+    config_space = copy.deepcopy(scenario.configspace)
 
     # Need to edit the output directory, but scenario dataclass is frozen
     scenario_dict = Scenario.make_serializable(scenario)
@@ -21,7 +21,9 @@ def get_scenario_dict(scenario: Scenario) -> dict[str, Any]:
     return scenario_dict  # type: ignore
 
 
-def set_output_dir(scenario: Scenario, output_dir: Path, name: str) -> Scenario:
+def set_scenario_output_dir(
+    scenario: Scenario, output_dir: Path, name: str
+) -> Scenario:
     """TODO Docstring"""
     scenario_dict = get_scenario_dict(scenario)
 
@@ -31,7 +33,7 @@ def set_output_dir(scenario: Scenario, output_dir: Path, name: str) -> Scenario:
     return Scenario(**scenario_dict)
 
 
-def set_instances(
+def set_scenario_instances(
     scenario: Scenario,
     instances: list[str],
     instance_features: dict[str, list[float]],
