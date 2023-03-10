@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 from ConfigSpace import Configuration
@@ -19,10 +19,13 @@ class Incumbent:
 
 @dataclass
 class Incumbents:
-    incumbents: list[Incumbent] = []
+    incumbents: list[Incumbent] = field(default_factory=list)
 
     def __iter__(self):
         return self.incumbents.__iter__()
+
+    def __len__(self):
+        return self.incumbents.__len__()
 
     def add_new_incumbent(self, incumbent: Incumbent) -> bool:
         if self._is_config_in_incumbents(incumbent.config):
@@ -32,8 +35,8 @@ class Incumbents:
 
         return True
 
-    def append(self, *args, **kwargs):
-        self.incumbents.append(*args, **kwargs)
+    def append(self, incumbent: Incumbent):
+        self.incumbents.append(incumbent)
 
     def get_best_n(self, n: int):
         self._sort()
