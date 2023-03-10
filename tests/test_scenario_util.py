@@ -1,8 +1,9 @@
 from pathlib import Path
-import src.util.scenario_util as scenario_util
 
 from ConfigSpace import ConfigurationSpace, Float
 from smac.scenario import Scenario
+
+import src.util.scenario_util as scenario_util
 
 DummyConfig = ConfigurationSpace()
 DummyConfig.add_hyperparameters(
@@ -46,13 +47,14 @@ def test_set_scenario_output_dir():
     )
     assert scenario.name == run_name
 
+
 def test_set_scenario_instances():
     dummy_inst = ["hello", "world"]
-    dummy_inst_feat = {"hello" : [2.0], "world" : [10.0]}
+    dummy_inst_feat = {"hello": [2.0], "world": [10.0]}
 
     scenario = scenario_util.set_scenario_instances(
         DummyScenario, dummy_inst, dummy_inst_feat
     )
-    
+
     assert scenario.instances == dummy_inst
     assert scenario.instance_features == dummy_inst_feat
