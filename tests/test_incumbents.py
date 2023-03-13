@@ -24,7 +24,7 @@ def test_add_new_incumbent(incumbents: Incumbents, incumbent: Incumbent):
 
 
 def test_get_best_n(incumbents: Incumbents, incumbent: Incumbent):
-    assert incumbents.get_best_n(1) == [incumbent]
+    assert incumbents.get_best_n(1).incumbents == [incumbent]
 
 
 def test_get_configs(incumbents: Incumbents, config_space):
