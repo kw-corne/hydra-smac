@@ -89,6 +89,106 @@ class Hydra:
         # instance, config portfolio index
         self._validation_run_name = "valid_{}_{}"
 
+    def optimize(self) -> list[Configuration]:
+        """
+        Constructs a new portfolio of configurations
+
+        Returns
+        -------
+        portfolio : list[Configuration]
+            The portfolio of configurations
+        """
+        self.portfolio: list[Configuration] = []
+        self._cost_per_instance: DefaultDict[str, float] = defaultdict(
+            lambda: math.inf
+        )
+        self._cost_each_iter: list[float] = []
+        self._hydra_iter: int = 0
+
+        for self._hydra_iter in range(self._hydra_iterations):
+            logger.info(f"Starting Hydra iteration {self._hydra_iter}")
+
+            incumbents = self._do_smac_runs()
+            self._update_portfolio(incumbents)
+
+            logger.info(
+                f"Cost after iteration {self._hydra_iter} "
+                f"is {self._cost_each_iter[self._hydra_iter]}"
+            )
+
+            if self._hydra_iter > 0 and self._should_stop_early():
+                logger.info(
+                    f"Performance stagnated after iteration {self._hydra_iter},"
+                    " terminating..."
+                )
+                break
+
+        logger.debug(f"{'Iteration':<10} {'Cost':<25}")
+        logger.debug("=" * 35)
+
+        for i, cost in enumerate(self._cost_each_iter):
+            logger.debug(f"{i:<10} {cost:<20}")
+
+        logger.debug("=" * 35)
+
+        return self.portfolio
+
+    def validate(
+        self,
+        portfolio: list[Configuration],
+        instances: list[str],
+        instance_features: dict[str, list[float]],
+    ) -> float:
+        """
+        Validate the performance of a portfolio on the validation instances
+
+        Parameters
+        ----------
+        portfolio : list[Configuration]
+            The list of configurations to be validated on the test instances
+        instances : list[str]
+            The names of the instances to validate, e.g. name of a dataset
+        instance_features : dict[str, list[float]] | None, defaults to None
+            The (meta) features of each instance, e.g. average
+
+        Returns
+        -------
+        cost : float
+            The mean cost of the portfolio across the validation instances
+        """
+        cost_per_instance: DefaultDict[str, float] = defaultdict(
+            lambda: math.inf
+        )
+
+        for i, config in enumerate(portfolio):
+            for instance in instances:
+                run_name = self._validation_run_name.format(instance, i)
+                scenario = Scenario(
+                    config,
+                    instances=[instance],
+                    instance_features={instance: instance_features[instance]},
+                )
+
+                scenario = set_scenario_output_dir(
+                    scenario, self._valdation_run_output_dir, run_name
+                )
+
+                # TODO: Make this somehow only run configs once per instance?
+                smac = MultiFidelityFacade(
+                    scenario=scenario,
+                    target_function=self._target_function,
+                )
+
+                # Prevents RuntimeError about calling __post_init__ first
+                smac._optimizer._intensifier.__post_init__()
+
+                cost = self._target_function(config, instance, 0)
+                cost_per_instance[instance] = min(
+                    cost_per_instance[instance], cost
+                )
+
+        return float(np.mean(list(cost_per_instance.values())))
+
     def _hydra_target_function(
         self, config: Configuration, instance: str, seed: int = 0
     ) -> float:
@@ -251,103 +351,3 @@ class Hydra:
             )
 
         self._add_new_incumbents_to_portfolio(incumbents)
-
-    def optimize(self) -> list[Configuration]:
-        """
-        Constructs a new portfolio of configurations
-
-        Returns
-        -------
-        portfolio : list[Configuration]
-            The portfolio of configurations
-        """
-        self.portfolio: list[Configuration] = []
-        self._cost_per_instance: DefaultDict[str, float] = defaultdict(
-            lambda: math.inf
-        )
-        self._cost_each_iter: list[float] = []
-        self._hydra_iter: int = 0
-
-        for self._hydra_iter in range(self._hydra_iterations):
-            logger.info(f"Starting Hydra iteration {self._hydra_iter}")
-
-            incumbents = self._do_smac_runs()
-            self._update_portfolio(incumbents)
-
-            logger.info(
-                f"Cost after iteration {self._hydra_iter} "
-                f"is {self._cost_each_iter[self._hydra_iter]}"
-            )
-
-            if self._hydra_iter > 0 and self._should_stop_early():
-                logger.info(
-                    f"Performance stagnated after iteration {self._hydra_iter},"
-                    " terminating..."
-                )
-                break
-
-        logger.debug(f"{'Iteration':<10} {'Cost':<25}")
-        logger.debug("=" * 35)
-
-        for i, cost in enumerate(self._cost_each_iter):
-            logger.debug(f"{i:<10} {cost:<20}")
-
-        logger.debug("=" * 35)
-
-        return self.portfolio
-
-    def validate(
-        self,
-        portfolio: list[Configuration],
-        instances: list[str],
-        instance_features: dict[str, list[float]],
-    ) -> float:
-        """
-        Validate the performance of a portfolio on the validation instances
-
-        Parameters
-        ----------
-        portfolio : list[Configuration]
-            The list of configurations to be validated on the test instances
-        instances : list[str]
-            The names of the instances to validate, e.g. name of a dataset
-        instance_features : dict[str, list[float]] | None, defaults to None
-            The (meta) features of each instance, e.g. average
-
-        Returns
-        -------
-        cost : float
-            The mean cost of the portfolio across the validation instances
-        """
-        cost_per_instance: DefaultDict[str, float] = defaultdict(
-            lambda: math.inf
-        )
-
-        for i, config in enumerate(portfolio):
-            for instance in instances:
-                run_name = self._validation_run_name.format(instance, i)
-                scenario = Scenario(
-                    config,
-                    instances=[instance],
-                    instance_features={instance: instance_features[instance]},
-                )
-
-                scenario = set_scenario_output_dir(
-                    scenario, self._valdation_run_output_dir, run_name
-                )
-
-                # TODO: Make this somehow only run configs once per instance?
-                smac = MultiFidelityFacade(
-                    scenario=scenario,
-                    target_function=self._target_function,
-                )
-
-                # Prevents RuntimeError about calling __post_init__ first
-                smac._optimizer._intensifier.__post_init__()
-
-                cost = self._target_function(config, instance, 0)
-                cost_per_instance[instance] = min(
-                    cost_per_instance[instance], cost
-                )
-
-        return float(np.mean(list(cost_per_instance.values())))
