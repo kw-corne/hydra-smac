@@ -7,7 +7,7 @@ from smac.runhistory.runhistory import RunHistory
 from src.hydrasmac.incumbents import Incumbent, Incumbents
 
 
-@pytest.fixture()
+@pytest.fixture
 def config_space():
     DummyConfig = ConfigurationSpace()
     DummyConfig.add_hyperparameters(
