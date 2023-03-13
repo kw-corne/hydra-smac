@@ -1,8 +1,6 @@
 from copy import deepcopy
 
-import pytest
-from ConfigSpace import ConfigurationSpace, Float
-from smac.runhistory.runhistory import RunHistory
+from ConfigSpace import Float
 
 from src.hydrasmac.incumbents import Incumbent, Incumbents
 
