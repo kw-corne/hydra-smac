@@ -2,7 +2,6 @@ from copy import deepcopy
 
 import pytest
 from ConfigSpace import Configuration, ConfigurationSpace, Float
-from pytest import MonkeyPatch
 from smac import RunHistory, Scenario
 
 from src.hydrasmac.hydra import Hydra
@@ -87,15 +86,3 @@ def hydra(scenario, target_function) -> Hydra:
         incumbents_added_per_iter=2,
         stop_early=True,
     )
-
-
-@pytest.fixture
-def mock_hydra(hydra: Hydra, monkeypatch: MonkeyPatch, cost_dict) -> Hydra:
-    def mocked_smac_runs() -> Incumbents:
-        incs = [Incumbent(config_space, RunHistory(), cost_dict)]
-
-        return Incumbents(incs)
-
-    monkeypatch.setattr(hydra, "_do_smac_runs", mocked_smac_runs)
-
-    return hydra
