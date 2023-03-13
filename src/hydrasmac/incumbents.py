@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -38,9 +40,9 @@ class Incumbents:
     def append(self, incumbent: Incumbent):
         self.incumbents.append(incumbent)
 
-    def get_best_n(self, n: int):
+    def get_best_n(self, n: int) -> Incumbents:
         self._sort()
-        return self.incumbents[:n]
+        return Incumbents(self.incumbents[:n])
 
     def get_configs(self) -> list[Configuration]:
         return [incumbent.config for incumbent in self.incumbents]
