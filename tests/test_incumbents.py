@@ -7,44 +7,6 @@ from smac.runhistory.runhistory import RunHistory
 from src.hydrasmac.incumbents import Incumbent, Incumbents
 
 
-@pytest.fixture
-def config_space():
-    DummyConfig = ConfigurationSpace()
-    DummyConfig.add_hyperparameters(
-        [
-            Float("x", (1.0, 5.0)),
-            Float("y", (1.0, 5.0)),
-            Float("z", (1.0, 5.0)),
-        ]
-    )
-    return DummyConfig
-
-
-@pytest.fixture
-def cost_dict():
-    return {
-        "a": 100.0,
-        "b": 400.0,
-        "c": 700.0,
-    }
-
-
-@pytest.fixture(autouse=True)
-def incumbent(config_space, cost_dict):
-    return Incumbent(config_space, RunHistory(), cost_dict)
-
-
-@pytest.fixture(autouse=True)
-def incumbents(incumbent: Incumbent, cost_dict):
-    incumbent2 = deepcopy(incumbent)
-    cost_dict2 = deepcopy(cost_dict)
-
-    cost_dict2["a"] = 400.0
-    incumbent2.cost_dict = cost_dict2
-
-    return Incumbents([incumbent, incumbent2])
-
-
 def test_mean_cost(incumbent: Incumbent):
     assert incumbent.mean_cost() == 400.0
 
