@@ -3,28 +3,28 @@ repos:
     rev: 5.10.1
     hooks:
       - id: isort
-        name: isort src
-        args: [--profile=black, --line-length=79]
-        files: src
+        name: isort src and tests
+        args: [--profile=black, --line-length=80]
+        files: "src|tests"
 
   - repo: https://github.com/ambv/black
     rev: 22.10.0
     hooks:
       - id: black
-        name: black src
-        args: [--line-length=79]
-        files: src
+        name: black src and tests
+        args: [--line-length=80]
+        files: "src|tests"
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 5.0.4
+    hooks:
+      - id: flake8
+        name: flake8 src and tests
+        files: "src|tests"
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v0.991
     hooks:
       - id: mypy
         name: mypy src
-        files: src
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 5.0.4
-    hooks:
-      - id: flake8
-        name: flake8 src
         files: src
