@@ -16,9 +16,9 @@ from smac.facade.multi_fidelity_facade import MultiFidelityFacade
 from smac.runhistory.runhistory import RunHistory
 from smac.scenario import Scenario
 
-from src.hydrasmac.incumbents import Incumbent, Incumbents
-from src.hydrasmac.types import CostDict, TargetFunction
-from src.util.scenario_util import set_scenario_output_dir
+from hydrasmac.incumbents import Incumbent, Incumbents
+from hydrasmac.types import CostDict, TargetFunction
+from util.scenario_util import set_scenario_output_dir
 
 logger = logging.getLogger(__name__)
 
@@ -240,7 +240,8 @@ class Hydra:
             )
 
             logger.debug(
-                f"Instance: {instance:<30} Cost {instance_costs[instance]:<30}"
+                f"Instance: {instance:<30}"
+                f"Cost {mean_instance_costs[instance]:<30}"
             )
 
         return mean_instance_costs
@@ -283,7 +284,7 @@ class Hydra:
             if was_duplicate:
                 logger.info(
                     f"Incumbent in SMAC iter {smac_iter} not added because"
-                    "it was already present"
+                    " it was already present"
                 )
 
         return incumbents
