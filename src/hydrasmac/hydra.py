@@ -258,6 +258,8 @@ class Hydra:
             target_function = self._hydra_target_function
 
         for smac_iter in range(self._smac_runs_per_iter):
+            logger.info(f"Starting SMAC run {smac_iter}")
+
             run_name = self._smac_run_name.format(self._hydra_iter, smac_iter)
             scenario = set_scenario_output_dir(
                 self._scenario, self._top_output_dir, run_name
@@ -271,7 +273,7 @@ class Hydra:
             incumbent_config = smac.optimize()
             runhistory = smac.runhistory
 
-            was_duplicate = incumbents.add_new_incumbent(
+            was_added = incumbents.add_new_incumbent(
                 Incumbent(
                     incumbent_config,
                     runhistory,
@@ -281,10 +283,10 @@ class Hydra:
                 )
             )
 
-            if was_duplicate:
+            if not was_added:
                 logger.info(
                     f"Incumbent in SMAC iter {smac_iter} not added because"
-                    " it was already present"
+                    " it was already present in the incumbents"
                 )
 
         return incumbents
