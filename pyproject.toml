@@ -36,6 +36,10 @@ dev = [
     "coverage",
 ]
 
+[tool.black]
+line-length = 80
+target-version = ['py310']
+
 [tool.bumpver]
 current_version = "0.0.6"
 version_pattern = "MAJOR.MINOR.PATCH"
@@ -51,4 +55,3 @@ push = true
 "README.md" = [
     "{version}",
 ]
-
