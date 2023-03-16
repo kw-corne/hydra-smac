@@ -10,11 +10,9 @@ def test_mean_cost(incumbent: Incumbent):
 
 
 def test_add_new_incumbent(incumbents: Incumbents, incumbent: Incumbent):
-    before_len = len(incumbents)
-
     # Duplicate config so shouldn't get appended
-    incumbents.add_new_incumbent(incumbent)
-    assert len(incumbents) == before_len
+    was_added = incumbents.add_new_incumbent(incumbent)
+    assert not was_added
 
     new_inc = deepcopy(incumbent)
     new_inc.config.add_hyperparameters([Float("zzz", (1.0, 5.0))])
