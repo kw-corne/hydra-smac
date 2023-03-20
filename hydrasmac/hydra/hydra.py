@@ -9,7 +9,7 @@ from typing import DefaultDict, cast
 
 import numpy as np
 from ConfigSpace import Configuration
-from smac import AlgorithmConfigurationFacade, MultiFidelityFacade
+from smac import AlgorithmConfigurationFacade
 from smac.runhistory.runhistory import RunHistory
 from smac.scenario import Scenario
 
@@ -45,6 +45,8 @@ class Hydra:
     timeout_penalty : float
         A value for penalizing trials that exceed their maximum allowed time.
         If a trial runs for too long, it's cost will be cost * timeout_penalty.
+    output_folder_name : str
+        The name given to the output folder of the run
 
     .. _Hydra:
         https://www.cs.ubc.ca/labs/algorithms/Projects/Hydra/
@@ -60,6 +62,7 @@ class Hydra:
         incumbents_added_per_iter: int = 1,
         stop_early: bool = True,
         timeout_penalty: float = 0.0,
+        output_folder_name: str | None = None,
     ):
         self._scenario = scenario
         self._target_function = target_function
@@ -79,7 +82,10 @@ class Hydra:
         self._instances = self._scenario.instances
         self._instance_features = self._scenario.instance_features
 
-        self._top_output_dir = Path(f"hydra-output-{datetime.now()}")
+        self._top_output_dir = Path(
+            f"hydra-output/{output_folder_name or datetime.now()}"
+        )
+
         self._smac_run_output_dir = self._top_output_dir / "smac_runs"
         self._valdation_run_output_dir = (
             self._top_output_dir / "validation_runs"
@@ -140,9 +146,12 @@ class Hydra:
         portfolio: list[Configuration],
         instances: list[str],
         instance_features: dict[str, list[float]],
-    ) -> float:
+    ) -> CostDict:
         """
         Validate the performance of a portfolio on the validation instances
+
+        HACK: Currently there is no way to validate per instance in SMAC,
+        see https://github.com/automl/SMAC3/issues/909
 
         Parameters
         ----------
@@ -155,12 +164,11 @@ class Hydra:
 
         Returns
         -------
-        cost : float
-            The mean cost of the portfolio across the validation instances
+        costs : dict[str, float]
+            The smallest validated cost per instance
         """
-        cost_per_instance: DefaultDict[str, float] = defaultdict(
-            lambda: math.inf
-        )
+
+        cost_per_instance: CostDict = {}
 
         for i, config in enumerate(portfolio):
             for instance in instances:
@@ -175,21 +183,12 @@ class Hydra:
                     scenario, self._valdation_run_output_dir, run_name
                 )
 
-                # TODO: Make this somehow only run configs once per instance?
-                smac = MultiFidelityFacade(
-                    scenario=scenario,
-                    target_function=self._target_function,
-                )
-
-                # Prevents RuntimeError about calling __post_init__ first
-                smac._optimizer._intensifier.__post_init__()
-
                 cost = self._target_function(config, instance, 0)
                 cost_per_instance[instance] = min(
                     cost_per_instance[instance], cost
                 )
 
-        return float(np.mean(list(cost_per_instance.values())))
+        return cost_per_instance
 
     def _hydra_target_function(
         self, config: Configuration, instance: str, seed: int = 0
