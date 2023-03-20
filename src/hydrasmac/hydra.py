@@ -9,15 +9,12 @@ from typing import DefaultDict, cast
 
 import numpy as np
 from ConfigSpace import Configuration
-from smac.facade.algorithm_configuration_facade import (
-    AlgorithmConfigurationFacade,
-)
-from smac.facade.multi_fidelity_facade import MultiFidelityFacade
+from smac import AlgorithmConfigurationFacade, MultiFidelityFacade
 from smac.runhistory.runhistory import RunHistory
 from smac.scenario import Scenario
 
-from hydrasmac.incumbents import Incumbent, Incumbents
-from hydrasmac.types import CostDict, TargetFunction
+from src.hydrasmac.incumbents import Incumbent, Incumbents
+from src.hydrasmac.types import CostDict, TargetFunction
 from util.scenario_util import set_scenario_output_dir
 
 logger = logging.getLogger(__name__)
@@ -45,6 +42,9 @@ class Hydra:
         of iterations is reached, by checking if portfolio performance has not
         improved compared to the previous iteration or if a configuration
         that is already present in the portfolio is returned by a SMAC run.
+    timeout_penalty : float
+        A value for penalizing trials that exceed their maximum allowed time.
+        If a trial runs for too long, it's cost will be cost * timeout_penalty.
 
     .. _Hydra:
         https://www.cs.ubc.ca/labs/algorithms/Projects/Hydra/
@@ -59,6 +59,7 @@ class Hydra:
         smac_runs_per_iter: int = 2,
         incumbents_added_per_iter: int = 1,
         stop_early: bool = True,
+        timeout_penalty: float = 0.0,
     ):
         self._scenario = scenario
         self._target_function = target_function
@@ -73,6 +74,7 @@ class Hydra:
         self._smac_runs_per_iter = smac_runs_per_iter
         self._incumbents_added_per_iter = incumbents_added_per_iter
         self._stop_early = stop_early
+        self._timeout_penalty = timeout_penalty
 
         self._instances = self._scenario.instances
         self._instance_features = self._scenario.instance_features
@@ -269,7 +271,6 @@ class Hydra:
                 scenario=scenario,
                 target_function=target_function,
             )
-
             incumbent_config = smac.optimize()
             runhistory = smac.runhistory
 

@@ -27,4 +27,5 @@ repos:
     hooks:
       - id: mypy
         name: mypy src
+        args: [--config-file=pyproject.toml]
         files: src
