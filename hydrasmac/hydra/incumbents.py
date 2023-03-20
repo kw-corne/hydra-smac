@@ -6,7 +6,7 @@ import numpy as np
 from ConfigSpace import Configuration
 from smac.runhistory.runhistory import RunHistory
 
-from src.hydrasmac.types import CostDict
+from hydrasmac.hydra.types import CostDict
 
 
 @dataclass

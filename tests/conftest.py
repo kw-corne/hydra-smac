@@ -4,9 +4,9 @@ import pytest
 from ConfigSpace import Configuration, ConfigurationSpace, Float
 from smac import RunHistory, Scenario
 
-from src.hydrasmac.hydra import Hydra
-from src.hydrasmac.incumbents import Incumbent, Incumbents
-from src.hydrasmac.types import CostDict, TargetFunction
+from hydrasmac import Hydra
+from hydrasmac.hydra.incumbents import Incumbent, Incumbents
+from hydrasmac.hydra.types import CostDict, TargetFunction
 
 
 @pytest.fixture

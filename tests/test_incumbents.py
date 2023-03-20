@@ -2,7 +2,7 @@ from copy import deepcopy
 
 from ConfigSpace import Float
 
-from src.hydrasmac.incumbents import Incumbent, Incumbents
+from hydrasmac.hydra.incumbents import Incumbent, Incumbents
 
 
 def test_mean_cost(incumbent: Incumbent):

@@ -9,13 +9,15 @@ from typing import DefaultDict, cast
 
 import numpy as np
 from ConfigSpace import Configuration
-from smac import AlgorithmConfigurationFacade, MultiFidelityFacade
+from smac import AlgorithmConfigurationFacade, Callback, MultiFidelityFacade
+from smac.main.smbo import SMBO
+from smac.runhistory.dataclasses import TrialInfo, TrialValue
 from smac.runhistory.runhistory import RunHistory
 from smac.scenario import Scenario
 
-from src.hydrasmac.incumbents import Incumbent, Incumbents
-from src.hydrasmac.types import CostDict, TargetFunction
-from util.scenario_util import set_scenario_output_dir
+from hydrasmac.hydra.incumbents import Incumbent, Incumbents
+from hydrasmac.hydra.types import CostDict, TargetFunction
+from hydrasmac.util.scenario_util import set_scenario_output_dir
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +92,8 @@ class Hydra:
 
         # instance, config portfolio index
         self._validation_run_name = "valid_{}_{}"
+
+        self._setup_callbacks()
 
     def optimize(self) -> list[Configuration]:
         """
@@ -191,6 +195,19 @@ class Hydra:
 
         return float(np.mean(list(cost_per_instance.values())))
 
+    def _setup_callbacks(self):
+        class CustomCallbacks(Callback):
+            def on_tell_start(
+                self, smbo: SMBO, info: TrialInfo, value: TrialValue
+            ) -> bool | None:
+                print("/" * 80)
+                print(value)
+                print("/" * 80)
+
+                return None
+
+        self._Callbacks = CustomCallbacks()
+
     def _hydra_target_function(
         self, config: Configuration, instance: str, seed: int = 0
     ) -> float:
@@ -270,6 +287,7 @@ class Hydra:
             smac = AlgorithmConfigurationFacade(
                 scenario=scenario,
                 target_function=target_function,
+                callbacks=[self._Callbacks],
             )
             incumbent_config = smac.optimize()
             runhistory = smac.runhistory

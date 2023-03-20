@@ -5,7 +5,7 @@ repos:
       - id: isort
         name: isort src and tests
         args: [--profile=black, --line-length=80]
-        files: "src|tests"
+        files: "hydrasmac|tests"
 
   - repo: https://github.com/ambv/black
     rev: 22.10.0
@@ -13,14 +13,14 @@ repos:
       - id: black
         name: black src and tests
         args: [--line-length=80]
-        files: "src|tests"
+        files: "hydrasmac|tests"
 
   - repo: https://github.com/pycqa/flake8
     rev: 5.0.4
     hooks:
       - id: flake8
         name: flake8 src and tests
-        files: "src|tests"
+        files: "hydrasmac|tests"
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v0.991
@@ -28,4 +28,4 @@ repos:
       - id: mypy
         name: mypy src
         args: [--config-file=pyproject.toml]
-        files: src
+        files: hydrasmac
