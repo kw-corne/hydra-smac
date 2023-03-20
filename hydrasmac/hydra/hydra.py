@@ -9,16 +9,13 @@ from typing import DefaultDict, cast
 
 import numpy as np
 from ConfigSpace import Configuration
-from smac.facade.algorithm_configuration_facade import (
-    AlgorithmConfigurationFacade,
-)
-from smac.facade.multi_fidelity_facade import MultiFidelityFacade
+from smac import AlgorithmConfigurationFacade, MultiFidelityFacade
 from smac.runhistory.runhistory import RunHistory
 from smac.scenario import Scenario
 
-from src.hydrasmac.incumbents import Incumbent, Incumbents
-from src.hydrasmac.types import CostDict, TargetFunction
-from src.util.scenario_util import set_scenario_output_dir
+from hydrasmac.hydra.incumbents import Incumbent, Incumbents
+from hydrasmac.hydra.types import CostDict, TargetFunction
+from hydrasmac.util.scenario_util import set_scenario_output_dir
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +42,9 @@ class Hydra:
         of iterations is reached, by checking if portfolio performance has not
         improved compared to the previous iteration or if a configuration
         that is already present in the portfolio is returned by a SMAC run.
+    timeout_penalty : float
+        A value for penalizing trials that exceed their maximum allowed time.
+        If a trial runs for too long, it's cost will be cost * timeout_penalty.
 
     .. _Hydra:
         https://www.cs.ubc.ca/labs/algorithms/Projects/Hydra/
@@ -59,6 +59,7 @@ class Hydra:
         smac_runs_per_iter: int = 2,
         incumbents_added_per_iter: int = 1,
         stop_early: bool = True,
+        timeout_penalty: float = 0.0,
     ):
         self._scenario = scenario
         self._target_function = target_function
@@ -73,6 +74,7 @@ class Hydra:
         self._smac_runs_per_iter = smac_runs_per_iter
         self._incumbents_added_per_iter = incumbents_added_per_iter
         self._stop_early = stop_early
+        self._timeout_penalty = timeout_penalty
 
         self._instances = self._scenario.instances
         self._instance_features = self._scenario.instance_features
@@ -240,7 +242,8 @@ class Hydra:
             )
 
             logger.debug(
-                f"Instance: {instance:<30} Cost {instance_costs[instance]:<30}"
+                f"Instance: {instance:<30}"
+                f"Cost {mean_instance_costs[instance]:<30}"
             )
 
         return mean_instance_costs
@@ -257,6 +260,8 @@ class Hydra:
             target_function = self._hydra_target_function
 
         for smac_iter in range(self._smac_runs_per_iter):
+            logger.info(f"Starting SMAC run {smac_iter}")
+
             run_name = self._smac_run_name.format(self._hydra_iter, smac_iter)
             scenario = set_scenario_output_dir(
                 self._scenario, self._top_output_dir, run_name
@@ -266,11 +271,10 @@ class Hydra:
                 scenario=scenario,
                 target_function=target_function,
             )
-
             incumbent_config = smac.optimize()
             runhistory = smac.runhistory
 
-            was_duplicate = incumbents.add_new_incumbent(
+            was_added = incumbents.add_new_incumbent(
                 Incumbent(
                     incumbent_config,
                     runhistory,
@@ -280,10 +284,10 @@ class Hydra:
                 )
             )
 
-            if was_duplicate:
+            if not was_added:
                 logger.info(
                     f"Incumbent in SMAC iter {smac_iter} not added because"
-                    "it was already present"
+                    " it was already present in the incumbents"
                 )
 
         return incumbents

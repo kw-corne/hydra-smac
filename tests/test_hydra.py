@@ -3,8 +3,8 @@ from copy import deepcopy
 import pytest
 from pytest import MonkeyPatch
 
-from src.hydrasmac.hydra import Hydra
-from src.hydrasmac.incumbents import Incumbent, Incumbents
+from hydrasmac.hydra.hydra import Hydra
+from hydrasmac.hydra.incumbents import Incumbent, Incumbents
 
 
 @pytest.fixture

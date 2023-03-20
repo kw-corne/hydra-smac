@@ -3,7 +3,7 @@ from pathlib import Path
 from ConfigSpace import Configuration
 from smac.scenario import Scenario
 
-import src.util.scenario_util as scenario_util
+import hydrasmac.util.scenario_util as scenario_util
 
 
 def test_get_scenario_dict(scenario: Scenario, config_space: Configuration):
