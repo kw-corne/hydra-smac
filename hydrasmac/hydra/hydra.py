@@ -184,9 +184,13 @@ class Hydra:
                 )
 
                 cost = self._target_function(config, instance, 0)
-                cost_per_instance[instance] = min(
-                    cost_per_instance[instance], cost
-                )
+
+                if instance not in cost_per_instance:
+                    cost_per_instance[instance] = cost
+                else:
+                    cost_per_instance[instance] = min(
+                        cost_per_instance[instance], cost
+                    )
 
         return cost_per_instance
 
