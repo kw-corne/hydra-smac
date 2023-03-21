@@ -5,7 +5,7 @@ A minimal Python re-implementation of [Hydra](https://www.cs.ubc.ca/labs/algorit
 ## Getting started
 
 ```bash
-pip install hydrasmac
+pip install hydra-smac
 ```
 
 ## Example
