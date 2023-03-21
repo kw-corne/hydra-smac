@@ -42,9 +42,6 @@ class Hydra:
         of iterations is reached, by checking if portfolio performance has not
         improved compared to the previous iteration or if a configuration
         that is already present in the portfolio is returned by a SMAC run.
-    timeout_penalty : float
-        A value for penalizing trials that exceed their maximum allowed time.
-        If a trial runs for too long, it's cost will be cost * timeout_penalty.
     output_folder_name : str
         The name given to the output folder of the run
 
@@ -61,7 +58,6 @@ class Hydra:
         smac_runs_per_iter: int = 2,
         incumbents_added_per_iter: int = 1,
         stop_early: bool = True,
-        timeout_penalty: float = 0.0,
         output_folder_name: str | None = None,
     ):
         self._scenario = scenario
@@ -77,7 +73,6 @@ class Hydra:
         self._smac_runs_per_iter = smac_runs_per_iter
         self._incumbents_added_per_iter = incumbents_added_per_iter
         self._stop_early = stop_early
-        self._timeout_penalty = timeout_penalty
 
         self._instances = self._scenario.instances
         self._instance_features = self._scenario.instance_features
