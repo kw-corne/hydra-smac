@@ -153,6 +153,8 @@ class Hydra:
         HACK: Currently there is no way to validate per instance in SMAC,
         see https://github.com/automl/SMAC3/issues/909
 
+        TODO: Make this respect some scenario parameters like time limits
+
         Parameters
         ----------
         portfolio : list[Configuration]
