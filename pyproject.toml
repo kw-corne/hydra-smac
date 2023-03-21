@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hydra-smac"
-version = "0.0.6"
+version = "0.1.0"
 description = "Hydra + SMAC"
 readme = "README.md"
 authors = [{ name = "Corné Spek" }]
@@ -33,10 +33,32 @@ dev = [
     "flake8",
     "mypy",
     "bumpver",
+    "coverage",
 ]
 
+[tool.black]
+line_length = 80
+target-version = ['py310']
+
+[tool.isort]
+line_length = 80
+profile = "black"
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_any_generics = true
+ignore_missing_imports = true
+no_implicit_optional = true
+show_error_codes = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+no_implicit_reexport = true
+
 [tool.bumpver]
-current_version = "0.0.6"
+current_version = "0.1.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
@@ -50,4 +72,3 @@ push = true
 "README.md" = [
     "{version}",
 ]
-

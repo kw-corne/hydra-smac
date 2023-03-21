@@ -9,16 +9,13 @@ from typing import DefaultDict, cast
 
 import numpy as np
 from ConfigSpace import Configuration
-from smac.facade.algorithm_configuration_facade import (
-    AlgorithmConfigurationFacade,
-)
-from smac.facade.multi_fidelity_facade import MultiFidelityFacade
+from smac import AlgorithmConfigurationFacade
 from smac.runhistory.runhistory import RunHistory
 from smac.scenario import Scenario
 
-from src.hydrasmac.incumbents import Incumbent, Incumbents
-from src.hydrasmac.types import CostDict, TargetFunction
-from src.util.scenario_util import set_scenario_output_dir
+from hydrasmac.hydra.incumbents import Incumbent, Incumbents
+from hydrasmac.hydra.types import CostDict, TargetFunction
+from hydrasmac.util.scenario_util import set_scenario_output_dir
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +42,8 @@ class Hydra:
         of iterations is reached, by checking if portfolio performance has not
         improved compared to the previous iteration or if a configuration
         that is already present in the portfolio is returned by a SMAC run.
+    output_folder_name : str
+        The name given to the output folder of the run
 
     .. _Hydra:
         https://www.cs.ubc.ca/labs/algorithms/Projects/Hydra/
@@ -59,6 +58,7 @@ class Hydra:
         smac_runs_per_iter: int = 2,
         incumbents_added_per_iter: int = 1,
         stop_early: bool = True,
+        output_folder_name: str | None = None,
     ):
         self._scenario = scenario
         self._target_function = target_function
@@ -77,7 +77,10 @@ class Hydra:
         self._instances = self._scenario.instances
         self._instance_features = self._scenario.instance_features
 
-        self._top_output_dir = Path(f"hydra-output-{datetime.now()}")
+        self._top_output_dir = Path(
+            f"hydra-output/{output_folder_name or datetime.now()}"
+        )
+
         self._smac_run_output_dir = self._top_output_dir / "smac_runs"
         self._valdation_run_output_dir = (
             self._top_output_dir / "validation_runs"
@@ -138,9 +141,14 @@ class Hydra:
         portfolio: list[Configuration],
         instances: list[str],
         instance_features: dict[str, list[float]],
-    ) -> float:
+    ) -> CostDict:
         """
         Validate the performance of a portfolio on the validation instances
+
+        HACK: Currently there is no way to validate per instance in SMAC,
+        see https://github.com/automl/SMAC3/issues/909
+
+        TODO: Make this respect some scenario parameters like time limits
 
         Parameters
         ----------
@@ -153,12 +161,11 @@ class Hydra:
 
         Returns
         -------
-        cost : float
-            The mean cost of the portfolio across the validation instances
+        costs : dict[str, float]
+            The smallest validated cost per instance
         """
-        cost_per_instance: DefaultDict[str, float] = defaultdict(
-            lambda: math.inf
-        )
+
+        cost_per_instance: CostDict = {}
 
         for i, config in enumerate(portfolio):
             for instance in instances:
@@ -173,21 +180,16 @@ class Hydra:
                     scenario, self._valdation_run_output_dir, run_name
                 )
 
-                # TODO: Make this somehow only run configs once per instance?
-                smac = MultiFidelityFacade(
-                    scenario=scenario,
-                    target_function=self._target_function,
-                )
-
-                # Prevents RuntimeError about calling __post_init__ first
-                smac._optimizer._intensifier.__post_init__()
-
                 cost = self._target_function(config, instance, 0)
-                cost_per_instance[instance] = min(
-                    cost_per_instance[instance], cost
-                )
 
-        return float(np.mean(list(cost_per_instance.values())))
+                if instance not in cost_per_instance:
+                    cost_per_instance[instance] = cost
+                else:
+                    cost_per_instance[instance] = min(
+                        cost_per_instance[instance], cost
+                    )
+
+        return cost_per_instance
 
     def _hydra_target_function(
         self, config: Configuration, instance: str, seed: int = 0
@@ -240,7 +242,8 @@ class Hydra:
             )
 
             logger.debug(
-                f"Instance: {instance:<30} Cost {instance_costs[instance]:<30}"
+                f"Instance: {instance:<30}"
+                f"Cost {mean_instance_costs[instance]:<30}"
             )
 
         return mean_instance_costs
@@ -257,6 +260,8 @@ class Hydra:
             target_function = self._hydra_target_function
 
         for smac_iter in range(self._smac_runs_per_iter):
+            logger.info(f"Starting SMAC run {smac_iter}")
+
             run_name = self._smac_run_name.format(self._hydra_iter, smac_iter)
             scenario = set_scenario_output_dir(
                 self._scenario, self._top_output_dir, run_name
@@ -266,11 +271,10 @@ class Hydra:
                 scenario=scenario,
                 target_function=target_function,
             )
-
             incumbent_config = smac.optimize()
             runhistory = smac.runhistory
 
-            was_duplicate = incumbents.add_new_incumbent(
+            was_added = incumbents.add_new_incumbent(
                 Incumbent(
                     incumbent_config,
                     runhistory,
@@ -280,10 +284,10 @@ class Hydra:
                 )
             )
 
-            if was_duplicate:
+            if not was_added:
                 logger.info(
                     f"Incumbent in SMAC iter {smac_iter} not added because"
-                    "it was already present"
+                    " it was already present in the incumbents"
                 )
 
         return incumbents
