@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hydra-smac"
-version = "0.0.8"
+version = "0.1.0"
 description = "Hydra + SMAC"
 readme = "README.md"
 authors = [{ name = "Corné Spek" }]
@@ -58,7 +58,7 @@ warn_unused_configs = true
 no_implicit_reexport = true
 
 [tool.bumpver]
-current_version = "0.0.8"
+current_version = "0.1.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true

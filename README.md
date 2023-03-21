@@ -1,4 +1,4 @@
-# Hydra-SMAC 0.0.8
+# Hydra-SMAC 0.1.0
 
 A minimal Python re-implementation of [Hydra](https://www.cs.ubc.ca/labs/algorithms/Projects/Hydra/).
 
