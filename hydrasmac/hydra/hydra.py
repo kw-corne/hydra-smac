@@ -86,6 +86,8 @@ class Hydra:
             self._top_output_dir / "validation_runs"
         )
 
+        self._has_duplicates_this_iter = False
+
         # Hydra iter, SMAC iter
         self._smac_run_name = "iter_{}_{}"
 
@@ -114,17 +116,17 @@ class Hydra:
             incumbents = self._do_smac_runs()
             self._update_portfolio(incumbents)
 
-            logger.info(
-                f"Cost after iteration {self._hydra_iter} "
-                f"is {self._cost_each_iter[self._hydra_iter]}"
-            )
-
             if self._hydra_iter > 0 and self._should_stop_early():
                 logger.info(
                     f"Performance stagnated after iteration {self._hydra_iter},"
                     " terminating..."
                 )
                 break
+
+            logger.info(
+                f"Cost after iteration {self._hydra_iter} "
+                f"is {self._cost_each_iter[self._hydra_iter]}"
+            )
 
         logger.debug(f"{'Iteration':<10} {'Cost':<25}")
         logger.debug("=" * 35)
@@ -210,11 +212,14 @@ class Hydra:
 
     def _should_stop_early(self) -> bool:
         """Check if the portfolio performance has stagnated"""
-        return bool(
-            self._stop_early
-            and self._portfolio_cost
-            >= self._cost_each_iter[self._hydra_iter - 1]
-        )
+        if not self._stop_early:
+            return False
+        elif self._has_duplicates_this_iter:
+            return True
+        elif self._portfolio_cost >= self._cost_each_iter[self._hydra_iter - 1]:
+            return True
+        else:
+            return False
 
     # TODO: (UNSURE) Now looping over instances without considering different
     #       seeds and budgets, could lead to unfair comparisons?
@@ -321,9 +326,8 @@ class Hydra:
                     self._cost_per_instance[instance] = float(mean_cost)
 
     def _add_new_incumbents_to_portfolio(self, incumbents: Incumbents):
-        """Extends the portfolio with new configs, without adding duplicates,
-        if duplicate(s) are found, they are returned. The new cost of the
-        portfolio is also computed"""
+        """Extends the portfolio with new configs.The new cost of the portfolio
+        is also computed"""
         for inc in incumbents:
             self.portfolio.append(inc.config)
 
@@ -345,13 +349,20 @@ class Hydra:
         cost of the portfolio
         """
         incumbents = incumbents.get_best_n(self._incumbents_added_per_iter)
-        has_duplicates = self._has_duplicates(incumbents)
+        self._has_duplicates_this_iter = self._has_duplicates(incumbents)
 
-        # TODO: Make this stop the hydra process?
-        if has_duplicates:
+        # TODO: Not all incs have to be duplicates
+        if self._has_duplicates_this_iter:
             logger.info(
                 "SMAC runs returned configurations already present in the "
                 f"portfolio in iteration {self._hydra_iter}"
             )
+
+            self._has_duplicates_this_iter = True
+            self._cost_each_iter.append(
+                self._cost_each_iter[self._hydra_iter - 1]
+            )
+
+            return
 
         self._add_new_incumbents_to_portfolio(incumbents)
