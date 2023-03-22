@@ -2,9 +2,11 @@ from copy import deepcopy
 
 import pytest
 from pytest import MonkeyPatch
+from smac import Scenario
 
 from hydrasmac.hydra.hydra import Hydra
 from hydrasmac.hydra.incumbents import Incumbent, Incumbents
+from hydrasmac.hydra.types import TargetFunction
 
 
 @pytest.fixture
@@ -38,3 +40,13 @@ def test_portfolio_len_no_stop_early(mock_hydra: Hydra):
     portfolio = mock_hydra.optimize()
 
     assert len(portfolio) == mock_hydra._incumbents_added_per_iter
+
+
+def test_incs_added(target_function: TargetFunction, scenario: Scenario):
+    with pytest.raises(ValueError):
+        hydra = Hydra(
+            target_function,
+            scenario,
+            incumbents_added_per_iter=10,
+            smac_runs_per_iter=1,
+        )

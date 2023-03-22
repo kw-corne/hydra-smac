@@ -35,6 +35,13 @@ def config_space2() -> Configuration:
     return config_spc
 
 
+@pytest.fixture
+def configuration(
+    config_space: ConfigurationSpace, config_space2: ConfigurationSpace
+) -> Configuration:
+    return config_space.sample_configuration()
+
+
 @pytest.fixture(autouse=True)
 def incumbent(config_space, cost_dict) -> Incumbent:
     return Incumbent(config_space, RunHistory(), cost_dict)
@@ -55,6 +62,11 @@ def incumbents(
     incumbent2.cost_dict = cost_dict2
 
     return Incumbents([incumbent, incumbent2])
+
+
+@pytest.fixture
+def portfolio(config_space):
+    return config_space.sample_configuration(3)
 
 
 @pytest.fixture
