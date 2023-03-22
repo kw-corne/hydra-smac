@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pycqa/isort
-    rev: 5.10.1
+    rev: 5.12.0
     hooks:
       - id: isort
         name: isort src and tests
@@ -8,7 +8,7 @@ repos:
         files: "hydrasmac|tests"
 
   - repo: https://github.com/ambv/black
-    rev: 22.10.0
+    rev: 23.1.0
     hooks:
       - id: black
         name: black src and tests
@@ -16,14 +16,14 @@ repos:
         files: "hydrasmac|tests"
 
   - repo: https://github.com/pycqa/flake8
-    rev: 5.0.4
+    rev: 6.0.0
     hooks:
       - id: flake8
         name: flake8 src and tests
         files: "hydrasmac|tests"
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.991
+    rev: v1.1.1
     hooks:
       - id: mypy
         name: mypy src
