@@ -147,18 +147,13 @@ class Hydra:
         """
         Validate the performance of a portfolio on the validation instances
 
-        HACK: Currently there is no way to validate per instance in SMAC,
-        see https://github.com/automl/SMAC3/issues/909
-
-        TODO: Make this respect some scenario parameters like time limits
-
         Parameters
         ----------
         portfolio : list[Configuration]
             The list of configurations to be validated on the test instances
         instances : list[str]
             The names of the instances to validate, e.g. name of a dataset
-        instance_features : dict[str, list[float]] | None, defaults to None
+        instance_features : dict[str, list[float]]
             The (meta) features of each instance, e.g. average
 
         Returns
@@ -166,7 +161,9 @@ class Hydra:
         costs : dict[str, float]
             The smallest validated cost per instance
         """
-
+        # HACK: Currently there is no way to validate per instance in SMAC3 v2,
+        # see https://github.com/automl/SMAC3/issues/909
+        # TODO: Make this respect scenario parameters like time limits
         cost_per_instance: CostDict = {}
 
         for i, config in enumerate(portfolio):
