@@ -65,7 +65,7 @@ def incumbents(
 
 
 @pytest.fixture
-def portfolio(config_space):
+def portfolio(config_space) -> list[Configuration]:
     return config_space.sample_configuration(3)
 
 
