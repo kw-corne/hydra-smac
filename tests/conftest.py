@@ -11,15 +11,28 @@ from hydrasmac.hydra.types import CostDict, TargetFunction
 
 @pytest.fixture
 def config_space() -> Configuration:
-    DummyConfig = ConfigurationSpace()
-    DummyConfig.add_hyperparameters(
+    config_spc = ConfigurationSpace()
+    config_spc.add_hyperparameters(
         [
             Float("x", (1.0, 5.0)),
             Float("y", (1.0, 5.0)),
             Float("z", (1.0, 5.0)),
         ]
     )
-    return DummyConfig
+    return config_spc
+
+
+@pytest.fixture
+def config_space2() -> Configuration:
+    config_spc = ConfigurationSpace()
+    config_spc.add_hyperparameters(
+        [
+            Float("x2", (10.0, 50.0)),
+            Float("y2", (10.0, 50.0)),
+            Float("z2", (10.0, 50.0)),
+        ]
+    )
+    return config_spc
 
 
 @pytest.fixture(autouse=True)
@@ -28,8 +41,14 @@ def incumbent(config_space, cost_dict) -> Incumbent:
 
 
 @pytest.fixture(autouse=True)
-def incumbents(incumbent: Incumbent, cost_dict) -> Incumbents:
-    incumbent2 = deepcopy(incumbent)
+def incumbent2(config_space2, cost_dict) -> Incumbent:
+    return Incumbent(config_space2, RunHistory(), cost_dict)
+
+
+@pytest.fixture(autouse=True)
+def incumbents(
+    incumbent: Incumbent, incumbent2: Incumbent, cost_dict
+) -> Incumbents:
     cost_dict2 = deepcopy(cost_dict)
 
     cost_dict2["a"] = 400.0
