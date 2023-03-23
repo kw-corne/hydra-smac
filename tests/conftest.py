@@ -98,12 +98,31 @@ def target_function() -> TargetFunction:
 
 
 @pytest.fixture
-def scenario(config_space, instances, instance_features) -> Scenario:
+def scenario(
+    config_space: ConfigurationSpace,
+    instances: list[str],
+    instance_features: dict[str, list[float]],
+) -> Scenario:
     return Scenario(
         configspace=config_space,
         instances=instances,
         instance_features=instance_features,
         deterministic=True,
+    )
+
+
+@pytest.fixture
+def trivial_scenario(
+    config_space: ConfigurationSpace,
+    instances: list[str],
+    instance_features: dict[str, list[float]],
+) -> Scenario:
+    return Scenario(
+        configspace=config_space,
+        instances=instances,
+        instance_features=instance_features,
+        deterministic=True,
+        n_trials=10,
     )
 
 

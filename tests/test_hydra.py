@@ -65,9 +65,27 @@ def test_stop_early(MockHydra: Hydra):
     pass
 
 
-# TODO
-def test_do_smac_runs():
-    pass
+def test_simple_hydra_run(
+    trivial_scenario: Scenario, target_function: TargetFunction
+):
+    hydra = Hydra(
+        trivial_scenario,
+        target_function,
+        hydra_iterations=2,
+        smac_runs_per_iter=2,
+        incumbents_added_per_iter=1,
+        stop_early=True,
+    )
+
+    portfolio = hydra.optimize()
+    print(portfolio)
+    assert len(portfolio) == 1
+
+    # the target function always returns 1 so SMAC shouldn't find any
+    # improvements to the default configuration
+    assert (
+        portfolio[0] == trivial_scenario.configspace.get_default_configuration()
+    )
 
 
 def test_validate(MockHydra: Hydra, portfolio: list[Configuration]):
