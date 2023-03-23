@@ -42,7 +42,9 @@ class Hydra:
         of iterations is reached, by checking if portfolio performance has not
         improved compared to the previous iteration or if a configuration
         that is already present in the portfolio is returned by a SMAC run.
-    output_folder_name : str
+    output_dir_path : Path
+        The path where the `hydra_output` directory will be created
+    output_dir_name : str
         The name given to the output folder of the run
 
     .. _Hydra:
@@ -58,7 +60,8 @@ class Hydra:
         smac_runs_per_iter: int = 2,
         incumbents_added_per_iter: int = 1,
         stop_early: bool = True,
-        output_folder_name: str | None = None,
+        output_dir_path: Path = Path("./"),
+        output_dir_name: str | None = None,
     ):
         self._scenario = scenario
         self._target_function = target_function
@@ -78,13 +81,16 @@ class Hydra:
         self._instance_features = self._scenario.instance_features
 
         self._top_output_dir = Path(
-            f"hydra-output/{output_folder_name or datetime.now()}"
+            output_dir_path
+            / f"hydra_output/{output_dir_name or datetime.now()}"
         )
 
         self._smac_run_output_dir = self._top_output_dir / "smac_runs"
         self._valdation_run_output_dir = (
             self._top_output_dir / "validation_runs"
         )
+
+        self._has_duplicates_this_iter = False
 
         # Hydra iter, SMAC iter
         self._smac_run_name = "iter_{}_{}"
@@ -114,17 +120,17 @@ class Hydra:
             incumbents = self._do_smac_runs()
             self._update_portfolio(incumbents)
 
-            logger.info(
-                f"Cost after iteration {self._hydra_iter} "
-                f"is {self._cost_each_iter[self._hydra_iter]}"
-            )
-
             if self._hydra_iter > 0 and self._should_stop_early():
                 logger.info(
                     f"Performance stagnated after iteration {self._hydra_iter},"
                     " terminating..."
                 )
                 break
+
+            logger.info(
+                f"Cost after iteration {self._hydra_iter} "
+                f"is {self._cost_each_iter[self._hydra_iter]}"
+            )
 
         logger.debug(f"{'Iteration':<10} {'Cost':<25}")
         logger.debug("=" * 35)
@@ -145,18 +151,13 @@ class Hydra:
         """
         Validate the performance of a portfolio on the validation instances
 
-        HACK: Currently there is no way to validate per instance in SMAC,
-        see https://github.com/automl/SMAC3/issues/909
-
-        TODO: Make this respect some scenario parameters like time limits
-
         Parameters
         ----------
         portfolio : list[Configuration]
             The list of configurations to be validated on the test instances
         instances : list[str]
             The names of the instances to validate, e.g. name of a dataset
-        instance_features : dict[str, list[float]] | None, defaults to None
+        instance_features : dict[str, list[float]]
             The (meta) features of each instance, e.g. average
 
         Returns
@@ -164,7 +165,9 @@ class Hydra:
         costs : dict[str, float]
             The smallest validated cost per instance
         """
-
+        # HACK: Currently there is no way to validate per instance in SMAC3 v2,
+        # see https://github.com/automl/SMAC3/issues/909
+        # TODO: Make this respect scenario parameters like time limits
         cost_per_instance: CostDict = {}
 
         for i, config in enumerate(portfolio):
@@ -210,11 +213,14 @@ class Hydra:
 
     def _should_stop_early(self) -> bool:
         """Check if the portfolio performance has stagnated"""
-        return bool(
-            self._stop_early
-            and self._portfolio_cost
-            >= self._cost_each_iter[self._hydra_iter - 1]
-        )
+        if not self._stop_early:
+            return False
+        elif self._has_duplicates_this_iter:
+            return True
+        elif self._portfolio_cost >= self._cost_each_iter[self._hydra_iter - 1]:
+            return True
+        else:
+            return False
 
     # TODO: (UNSURE) Now looping over instances without considering different
     #       seeds and budgets, could lead to unfair comparisons?
@@ -321,9 +327,8 @@ class Hydra:
                     self._cost_per_instance[instance] = float(mean_cost)
 
     def _add_new_incumbents_to_portfolio(self, incumbents: Incumbents):
-        """Extends the portfolio with new configs, without adding duplicates,
-        if duplicate(s) are found, they are returned. The new cost of the
-        portfolio is also computed"""
+        """Extends the portfolio with new configs.The new cost of the portfolio
+        is also computed"""
         for inc in incumbents:
             self.portfolio.append(inc.config)
 
@@ -345,13 +350,20 @@ class Hydra:
         cost of the portfolio
         """
         incumbents = incumbents.get_best_n(self._incumbents_added_per_iter)
-        has_duplicates = self._has_duplicates(incumbents)
+        self._has_duplicates_this_iter = self._has_duplicates(incumbents)
 
-        # TODO: Make this stop the hydra process?
-        if has_duplicates:
+        # TODO: Not all incs have to be duplicates
+        if self._has_duplicates_this_iter:
             logger.info(
                 "SMAC runs returned configurations already present in the "
                 f"portfolio in iteration {self._hydra_iter}"
             )
+
+            self._has_duplicates_this_iter = True
+            self._cost_each_iter.append(
+                self._cost_each_iter[self._hydra_iter - 1]
+            )
+
+            return
 
         self._add_new_incumbents_to_portfolio(incumbents)

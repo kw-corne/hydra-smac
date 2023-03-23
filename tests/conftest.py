@@ -1,4 +1,5 @@
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 from ConfigSpace import Configuration, ConfigurationSpace, Float
@@ -11,15 +12,35 @@ from hydrasmac.hydra.types import CostDict, TargetFunction
 
 @pytest.fixture
 def config_space() -> Configuration:
-    DummyConfig = ConfigurationSpace()
-    DummyConfig.add_hyperparameters(
+    config_spc = ConfigurationSpace()
+    config_spc.add_hyperparameters(
         [
             Float("x", (1.0, 5.0)),
             Float("y", (1.0, 5.0)),
             Float("z", (1.0, 5.0)),
         ]
     )
-    return DummyConfig
+    return config_spc
+
+
+@pytest.fixture
+def config_space2() -> Configuration:
+    config_spc = ConfigurationSpace()
+    config_spc.add_hyperparameters(
+        [
+            Float("x2", (10.0, 50.0)),
+            Float("y2", (10.0, 50.0)),
+            Float("z2", (10.0, 50.0)),
+        ]
+    )
+    return config_spc
+
+
+@pytest.fixture
+def configuration(
+    config_space: ConfigurationSpace, config_space2: ConfigurationSpace
+) -> Configuration:
+    return config_space.sample_configuration()
 
 
 @pytest.fixture(autouse=True)
@@ -28,14 +49,25 @@ def incumbent(config_space, cost_dict) -> Incumbent:
 
 
 @pytest.fixture(autouse=True)
-def incumbents(incumbent: Incumbent, cost_dict) -> Incumbents:
-    incumbent2 = deepcopy(incumbent)
+def incumbent2(config_space2, cost_dict) -> Incumbent:
+    return Incumbent(config_space2, RunHistory(), cost_dict)
+
+
+@pytest.fixture(autouse=True)
+def incumbents(
+    incumbent: Incumbent, incumbent2: Incumbent, cost_dict
+) -> Incumbents:
     cost_dict2 = deepcopy(cost_dict)
 
     cost_dict2["a"] = 400.0
     incumbent2.cost_dict = cost_dict2
 
     return Incumbents([incumbent, incumbent2])
+
+
+@pytest.fixture
+def portfolio(config_space) -> list[Configuration]:
+    return config_space.sample_configuration(3)
 
 
 @pytest.fixture
@@ -67,7 +99,11 @@ def target_function() -> TargetFunction:
 
 
 @pytest.fixture
-def scenario(config_space, instances, instance_features) -> Scenario:
+def scenario(
+    config_space: ConfigurationSpace,
+    instances: list[str],
+    instance_features: dict[str, list[float]],
+) -> Scenario:
     return Scenario(
         configspace=config_space,
         instances=instances,
@@ -77,7 +113,24 @@ def scenario(config_space, instances, instance_features) -> Scenario:
 
 
 @pytest.fixture
-def hydra(scenario, target_function) -> Hydra:
+def trivial_scenario(
+    config_space: ConfigurationSpace,
+    instances: list[str],
+    instance_features: dict[str, list[float]],
+) -> Scenario:
+    return Scenario(
+        configspace=config_space,
+        instances=instances,
+        instance_features=instance_features,
+        deterministic=True,
+        n_trials=10,
+    )
+
+
+@pytest.fixture
+def hydra(
+    scenario: Scenario, target_function: TargetFunction, tmp_path: Path
+) -> Hydra:
     return Hydra(
         scenario,
         target_function,
