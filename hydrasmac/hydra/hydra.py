@@ -78,7 +78,7 @@ class Hydra:
         self._instance_features = self._scenario.instance_features
 
         self._top_output_dir = Path(
-            f"hydra-output/{output_folder_name or datetime.now()}"
+            f"hydra_output/{output_folder_name or datetime.now()}"
         )
 
         self._smac_run_output_dir = self._top_output_dir / "smac_runs"
