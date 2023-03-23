@@ -1,4 +1,5 @@
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 from ConfigSpace import Configuration
@@ -66,7 +67,7 @@ def test_stop_early(MockHydra: Hydra):
 
 
 def test_simple_hydra_run(
-    trivial_scenario: Scenario, target_function: TargetFunction
+    trivial_scenario: Scenario, target_function: TargetFunction, tmp_path: Path
 ):
     hydra = Hydra(
         trivial_scenario,
@@ -75,10 +76,11 @@ def test_simple_hydra_run(
         smac_runs_per_iter=2,
         incumbents_added_per_iter=1,
         stop_early=True,
+        output_dir_path=tmp_path / "hydra_tests_out",
     )
 
     portfolio = hydra.optimize()
-    print(portfolio)
+
     assert len(portfolio) == 1
 
     # the target function always returns 1 so SMAC shouldn't find any

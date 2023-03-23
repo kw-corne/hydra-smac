@@ -1,4 +1,5 @@
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 from ConfigSpace import Configuration, ConfigurationSpace, Float
@@ -127,7 +128,9 @@ def trivial_scenario(
 
 
 @pytest.fixture
-def hydra(scenario, target_function) -> Hydra:
+def hydra(
+    scenario: Scenario, target_function: TargetFunction, tmp_path: Path
+) -> Hydra:
     return Hydra(
         scenario,
         target_function,
