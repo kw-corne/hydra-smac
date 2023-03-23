@@ -42,7 +42,9 @@ class Hydra:
         of iterations is reached, by checking if portfolio performance has not
         improved compared to the previous iteration or if a configuration
         that is already present in the portfolio is returned by a SMAC run.
-    output_folder_name : str
+    output_dir_path : Path
+        The path where the `hydra_output` directory will be created
+    output_dir_name : str
         The name given to the output folder of the run
 
     .. _Hydra:
@@ -58,7 +60,8 @@ class Hydra:
         smac_runs_per_iter: int = 2,
         incumbents_added_per_iter: int = 1,
         stop_early: bool = True,
-        output_folder_name: str | None = None,
+        output_dir_path: Path = Path("./"),
+        output_dir_name: str | None = None,
     ):
         self._scenario = scenario
         self._target_function = target_function
@@ -78,7 +81,8 @@ class Hydra:
         self._instance_features = self._scenario.instance_features
 
         self._top_output_dir = Path(
-            f"hydra_output/{output_folder_name or datetime.now()}"
+            output_dir_path
+            / f"hydra_output/{output_dir_name or datetime.now()}"
         )
 
         self._smac_run_output_dir = self._top_output_dir / "smac_runs"
