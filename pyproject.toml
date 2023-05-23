@@ -16,7 +16,7 @@ classifiers = [
 keywords = ["Hydra", "SMAC"]
 requires-python = ">=3.10"
 dependencies = [
-    "SMAC == 2.0.0"
+    "SMAC == 2.0.1"
 ]
 
 [project.urls]
